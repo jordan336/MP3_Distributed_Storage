@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include "networking.h"
 #include "file_io.h"
+#include "threads.h"
 
 #define VERBOSE 1
 
@@ -27,7 +28,20 @@ void print_status(char * addresses, int * delays, int num_processes){
     printf("---------------------------------\n");
 }
 
-int teardown(){
+void pthread_setup(){
+	if(pthread_create(&command_thread, NULL, &do_commands, NULL)){
+		printf("Command thread create error\n");
+	}
+	if(pthread_create(&message_thread, NULL, &do_messages, NULL)){
+		printf("Message thread create error\n");
+	}
+	pthread_join(command_thread, NULL);
+	pthread_join(message_thread, NULL);
+}
+
+int teardown(char * addresses, int * delays){
+	free(addresses);
+	free(delays);
     return 1;
 }
 
@@ -48,25 +62,15 @@ int main (int argc, const char* argv[]){
 			printf("Must have at least 4 servers in the cluster\n");
 			return -1;
 		}
-
-		/* int i = 3;
-		while(i < argc){
-			int time = atoi(argv[i]);
-			if(time < 0){
-				printf("Delay times must be positive.\n");
-				return -1;
-			}
-			else{
-				printf("i: %d time: %d\n", i, time);
-				delays[i++] = time;
-			}
-		} */
     }
 
     if(addresses == NULL) return -1;  //failed to read config file
 
     if(VERBOSE) print_status(addresses, delays, num_processes);
-    
+   
+	pthread_setup();
+	teardown(addresses, delays);
+ 
 	return 0;
 }
 
