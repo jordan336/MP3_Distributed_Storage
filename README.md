@@ -13,11 +13,11 @@ Usage
 
 Config File
 ===========
-format:
-    num_processes \n
-    ip_address_1  delay_to_1 \n
-    ip_address_2  delay_to_2 \n 
-    ...
+format: <br>
+    num_processes \n <br>
+    ip_address_1  delay_to_1 \n <br>
+    ip_address_2  delay_to_2 \n <br>
+    ... <br>
 
 
 Change Log
