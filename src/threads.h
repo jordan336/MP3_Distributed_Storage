@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include "operations.h"
 
 pthread_t command_thread, message_thread;
 

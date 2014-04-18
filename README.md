@@ -7,9 +7,11 @@ Distributed Storage MP
 - Mark Kennedy - kenned31
 - Jordan Ebel  - ebel1
 
+
 Usage
 =====
 ./store config_file id
+
 
 Config File
 ===========
@@ -20,8 +22,17 @@ format: <br>
     ... <br>
 
 
+To Do
+=====
+- Implement functionality of each operation
+- Message delays
+- Inconsistency repair
+
+
 Change Log
 ==========
 
 - 4/15: project set up
+- 4/16: read in user commands
+- 4/16: message passing interface working
 

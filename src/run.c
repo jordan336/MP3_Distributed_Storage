@@ -15,6 +15,7 @@
 #include "networking.h"
 #include "file_io.h"
 #include "threads.h"
+#include "operations.h"
 
 #define VERBOSE 1
 
@@ -39,15 +40,16 @@ void pthread_setup(){
 	pthread_join(message_thread, NULL);
 }
 
-int teardown(char * addresses, int * delays){
+int teardown(char * addresses, int * delays, int listenfd){
 	free(addresses);
 	free(delays);
+	close(listenfd);
     return 1;
 }
 
 int main (int argc, const char* argv[]){
  
-    int id, num_processes;
+    int id, num_processes, listenfd;
     char * addresses;
 	int * delays;    
 
@@ -67,9 +69,12 @@ int main (int argc, const char* argv[]){
     if(addresses == NULL) return -1;  //failed to read config file
 
     if(VERBOSE) print_status(addresses, delays, num_processes);
-   
+  
+	listenfd = set_up_listen(PORT+id, 0);  //socket for receiving messages
+ 
+	init_operations(listenfd, num_processes, addresses, id);
 	pthread_setup();
-	teardown(addresses, delays);
+	teardown(addresses, delays, listenfd);
  
 	return 0;
 }
