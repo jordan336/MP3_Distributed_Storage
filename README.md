@@ -34,5 +34,5 @@ Change Log
 
 - 4/15: project set up
 - 4/16: read in user commands
-- 4/16: message passing interface working
+- 4/17: message passing interface working
 
