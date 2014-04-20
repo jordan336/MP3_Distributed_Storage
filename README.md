@@ -24,7 +24,7 @@ format: <br>
 
 To Do
 =====
-- Implement functionality of each operation
+- Use ACKs to enforce consistency level
 - Message delays
 - Inconsistency repair
 
@@ -35,4 +35,6 @@ Change Log
 - 4/15: project set up
 - 4/16: read in user commands
 - 4/17: message passing interface working
+- 4/20: operations working
+- 4/20: owner contacting replicas to do operation and ACK transmitting
 

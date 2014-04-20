@@ -29,19 +29,19 @@ void * do_commands(){
 		}
 		else if(strcmp(op, "delete") == 0){
 			if(sscanf(command+7, "%d ", arg1) != 1) printf("Delete requires a key\n");
-			else delete(*arg1);
+			else op_jump_function(*arg1, 0, 0, command, 3, 1);
 		}
 		else if(strcmp(op, "get") == 0){
 			if(sscanf(command+4, "%d %d ", arg1, arg2) != 2) printf("Get requires a key and a level\n");
-			else get(*arg1, *arg2);
+			else op_jump_function(*arg1, 0, *arg2, command, 0, 1);
 		}
 		else if(strcmp(op, "insert") == 0){
 			if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Insert requires a key, value, and level\n");
-			else insert(*arg1, *arg2, *arg3);
+			else op_jump_function(*arg1, *arg2, *arg3, command, 1, 1);
 		}
 		else if(strcmp(op, "update") == 0){
 			if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Update requies a key, value, and level\n");
-			else update(*arg1, *arg2, *arg3);
+			else op_jump_function(*arg1, *arg2, *arg3, command, 2, 1);
 		}
 		else if(strcmp(op, "show-all") == 0){
 			show_all();
