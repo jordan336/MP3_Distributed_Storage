@@ -5,6 +5,8 @@
 
 #define MAX_COM_LEN 100
 
+//execute thread
+//parse user input and do command or contact owner
 void * do_commands(){
 	char op[MAX_ARG_LEN]; 
 	int a1, a2, a3;
@@ -57,8 +59,51 @@ void * do_commands(){
 	return 0;
 }
 
+//receive thread
+//receive messages sent to owner or replicas and do operation
 void * do_messages(){
-	listen_and_do();
+	char op[MAX_ARG_LEN];
+	char command[MAX_BUF_LEN];
+	int a1, a2, a3;
+	int * arg1, * arg2, * arg3;
+	arg1 = &a1;
+	arg2 = &a2;
+	arg3 = &a3;
+	
+	while(1){
+		memset(command, 0, MAX_BUF_LEN);
+		memset(op,   0, MAX_ARG_LEN);
+		*arg1 = 0;
+		*arg2 = 0;
+		*arg3 = 0;
+
+		int rec_bytes = unicast_receive(command, 1);
+
+		if(rec_bytes > 0){
+			sscanf(command, "%s ", op);
+
+			if(strcmp(op, "delete") == 0){
+				if(sscanf(command+7, "%d ", arg1) != 1) printf("Delete requires a key\n");
+				else op_jump_function(*arg1, 0, 0, command, 3, 0);
+			}
+			else if(strcmp(op, "get") == 0){
+				if(sscanf(command+4, "%d %d ", arg1, arg2) != 2) printf("Get requires a key and a level\n");
+				else op_jump_function(*arg1, 0, *arg2, command, 0, 0);
+			}
+			else if(strcmp(op, "insert") == 0){
+				if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Insert requires a key, value, and level\n");
+				else op_jump_function(*arg1, *arg2, *arg3, command, 1, 0);
+			}
+			else if(strcmp(op, "update") == 0){
+				if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Update requies a key, value, and level\n");
+				else op_jump_function(*arg1, *arg2, *arg3, command, 2, 0);
+			}
+			else{
+				printf("Received unknown command %s\n", command);
+			}
+		}
+	}
+
 	return 0;
 }
 
