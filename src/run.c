@@ -17,8 +17,6 @@
 #include "threads.h"
 #include "operations.h"
 
-#define VERBOSE 1
-
 void print_status(char * addresses, int * delays, int num_processes){
     printf("Num processes: %d\n", num_processes);
     printf("IP Addresses | Delays\n");
@@ -40,17 +38,18 @@ void pthread_setup(){
 	pthread_join(message_thread, NULL);
 }
 
-int teardown(char * addresses, int * delays, int listenfd, int ackfd){
+int teardown(char * addresses, int * delays, int listenfd, int ackfd, int getackfd){
 	free(addresses);
 	free(delays);
 	close(listenfd);
 	close(ackfd);
+	close(getackfd);
     return 1;
 }
 
 int main (int argc, const char* argv[]){
  
-    int id, num_processes, listenfd, ackfd;
+    int id, num_processes, listenfd, ackfd, getackfd;
     char * addresses;
 	int * delays;    
 
@@ -71,12 +70,13 @@ int main (int argc, const char* argv[]){
 
     if(VERBOSE) print_status(addresses, delays, num_processes);
   
-	listenfd = set_up_listen(PORT+id, 0);      //socket for receiving messages
-    ackfd    = set_up_listen(ACK_PORT+id, 0);  //socket for acks
+	listenfd  = set_up_listen(PORT+id, 0);         //socket for receiving messages
+    ackfd     = set_up_listen(ACK_PORT+id, 0);     //socket for acks
+    getackfd  = set_up_listen(GETACK_PORT+id, 0);  //socket for get acks
  
-	init_operations(listenfd, ackfd, num_processes, addresses, id);
+	init_operations(listenfd, ackfd, getackfd, num_processes, addresses, id, delays);
 	pthread_setup();
-	teardown(addresses, delays, listenfd, ackfd);
+	teardown(addresses, delays, listenfd, ackfd, getackfd);
  
 	return 0;
 }

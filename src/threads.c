@@ -5,11 +5,16 @@
 
 #define MAX_COM_LEN 100
 
+typedef struct astruct{
+	char * command;
+	int sender;
+} arg_struct;
+
 //execute thread
 //parse user input and do command or contact owner
 void * do_commands(){
 	char op[MAX_ARG_LEN]; 
-	int a1, a2, a3;
+	int a1, a2, a3, retval;
 	int * arg1, * arg2, * arg3;
 	arg1 = &a1;
 	arg2 = &a2;
@@ -31,26 +36,30 @@ void * do_commands(){
 		}
 		else if(strcmp(op, "delete") == 0){
 			if(sscanf(command+7, "%d ", arg1) != 1) printf("Delete requires a key\n");
-			else op_jump_function(*arg1, 0, 0, command, 3, 1);
+			else retval = op_jump_function(*arg1, 0, 0, command, 3, 1, 0);
 		}
 		else if(strcmp(op, "get") == 0){
 			if(sscanf(command+4, "%d %d ", arg1, arg2) != 2) printf("Get requires a key and a level\n");
-			else op_jump_function(*arg1, 0, *arg2, command, 0, 1);
+			else{
+				retval = op_jump_function(*arg1, 0, *arg2, command, 0, 1, 0);
+				if(retval != -1) printf("key: %d value: %d\n", *arg1, retval);
+				else printf("key %d not found\n", *arg1);
+			}
 		}
 		else if(strcmp(op, "insert") == 0){
 			if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Insert requires a key, value, and level\n");
-			else op_jump_function(*arg1, *arg2, *arg3, command, 1, 1);
+			else retval = op_jump_function(*arg1, *arg2, *arg3, command, 1, 1, 0);
 		}
 		else if(strcmp(op, "update") == 0){
 			if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Update requies a key, value, and level\n");
-			else op_jump_function(*arg1, *arg2, *arg3, command, 2, 1);
+			else retval = op_jump_function(*arg1, *arg2, *arg3, command, 2, 1, 0);
 		}
 		else if(strcmp(op, "show-all") == 0){
-			show_all();
+			retval = show_all();
 		}
 		else if(strcmp(op, "search") == 0){
 			if(sscanf(command+7, "%d ", arg1) != 1) printf("Search requires a key\n");
-			else search(*arg1);
+			else retval = search(*arg1);
 		}
 		else{
 			printf("Unknown command %s\n", op);
@@ -59,48 +68,59 @@ void * do_commands(){
 	return 0;
 }
 
-//receive thread
-//receive messages sent to owner or replicas and do operation
-void * do_messages(){
+//run by next thread for every command
+void * execute_command(void * args){
 	char op[MAX_ARG_LEN];
-	char command[MAX_BUF_LEN];
-	int a1, a2, a3;
+	int a1, a2, a3, retval;
 	int * arg1, * arg2, * arg3;
 	arg1 = &a1;
 	arg2 = &a2;
 	arg3 = &a3;
-	
-	while(1){
-		memset(command, 0, MAX_BUF_LEN);
-		memset(op,   0, MAX_ARG_LEN);
-		*arg1 = 0;
-		*arg2 = 0;
-		*arg3 = 0;
+	*arg1 = 0;
+	*arg2 = 0;
+	*arg3 = 0;
 
-		int rec_bytes = unicast_receive(command, 1);
+	char * command = ((arg_struct *)args)->command;
+	int sender = ((arg_struct *)args)->sender;
+	
+	sscanf(command, "%s ", op);
+	if(strcmp(op, "delete") == 0){
+		if(sscanf(command+7, "%d ", arg1) != 1) printf("Delete requires a key\n");
+		else retval = op_jump_function(*arg1, 0, 0, command, 3, 0, sender);
+	}
+	else if(strcmp(op, "get") == 0){
+		if(sscanf(command+4, "%d %d ", arg1, arg2) != 2) printf("Get requires a key and a level\n");
+		else retval = op_jump_function(*arg1, 0, *arg2, command, 0, 0, sender);
+	}
+	else if(strcmp(op, "insert") == 0){
+		if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Insert requires a key, value, and level\n");
+		else retval = op_jump_function(*arg1, *arg2, *arg3, command, 1, 0, sender);
+	}
+	else if(strcmp(op, "update") == 0){
+		if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Update requies a key, value, and level\n");
+		else retval = op_jump_function(*arg1, *arg2, *arg3, command, 2, 0, sender);
+	}
+	else{
+		printf("Received unknown command %s\n", command);
+	}
+	return 0;
+}
+
+//receive thread
+//receive messages sent to owner or replicas and do operation
+void * do_messages(){
+	char command[MAX_BUF_LEN];
+	int sender;
+		
+	while(1){
+		int rec_bytes = unicast_receive(command, &sender, 0);
 
 		if(rec_bytes > 0){
-			sscanf(command, "%s ", op);
-
-			if(strcmp(op, "delete") == 0){
-				if(sscanf(command+7, "%d ", arg1) != 1) printf("Delete requires a key\n");
-				else op_jump_function(*arg1, 0, 0, command, 3, 0);
-			}
-			else if(strcmp(op, "get") == 0){
-				if(sscanf(command+4, "%d %d ", arg1, arg2) != 2) printf("Get requires a key and a level\n");
-				else op_jump_function(*arg1, 0, *arg2, command, 0, 0);
-			}
-			else if(strcmp(op, "insert") == 0){
-				if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Insert requires a key, value, and level\n");
-				else op_jump_function(*arg1, *arg2, *arg3, command, 1, 0);
-			}
-			else if(strcmp(op, "update") == 0){
-				if(sscanf(command+7, "%d %d %d ", arg1, arg2, arg3) != 3) printf("Update requies a key, value, and level\n");
-				else op_jump_function(*arg1, *arg2, *arg3, command, 2, 0);
-			}
-			else{
-				printf("Received unknown command %s\n", command);
-			}
+			arg_struct args;
+			args.command = command;
+			args.sender = sender;
+			pthread_t thread;
+			pthread_create(&thread, NULL, &execute_command, (void *)&args);	
 		}
 	}
 
