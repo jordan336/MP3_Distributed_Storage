@@ -69,7 +69,9 @@ int main (int argc, const char* argv[]){
     if(addresses == NULL) return -1;  //failed to read config file
 
     if(VERBOSE) print_status(addresses, delays, num_processes);
-  
+ 
+	srand(time(NULL));
+
 	listenfd  = set_up_listen(PORT+id, 0);         //socket for receiving messages
     ackfd     = set_up_listen(ACK_PORT+id, 0);     //socket for acks
     getackfd  = set_up_listen(GETACK_PORT+id, 0);  //socket for get acks
